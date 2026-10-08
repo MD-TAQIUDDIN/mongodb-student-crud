@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Student Management System</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- HEADER -->
+        <header>
+            <h1>Student Management System</h1>
+            <p>Manage student records using Node.js and MongoDB</p>
+        </header>
+
+
+        <!-- ADD STUDENT -->
+        <section class="form-section">
+
+            <h2>Add Student</h2>
+
+            <form id="studentForm">
+
+                <div class="form-grid">
+
+                    <!-- NAME -->
+                    <div class="input-group">
+
+                        <label for="name">Name</label>
+
+                        <input
+                            type="text"
+                            id="name"
+                            placeholder="Enter student name"
+                        >
+
+                        <span
+                            id="nameError"
+                            class="field-error"
+                        ></span>
+
+                    </div>
+
+
+                    <!-- AGE -->
+                    <div class="input-group">
+
+                        <label for="age">Age</label>
+
+                        <input
+                            type="text"
+                            id="age"
+                            placeholder="Enter age"
+                        >
+
+                        <span
+                            id="ageError"
+                            class="field-error"
+                        ></span>
+
+                    </div>
+
+
+                    <!-- COURSE -->
+                    <div class="input-group">
+
+                        <label for="course">Course</label>
+
+                        <input
+                            type="text"
+                            id="course"
+                            placeholder="Enter course"
+                        >
+
+                        <span
+                            id="courseError"
+                            class="field-error"
+                        ></span>
+
+                    </div>
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="primary-btn"
+                >
+                    Add Student
+                </button>
+
+            </form>
+
+        </section>
+
+
+        <!-- STUDENT RECORDS -->
+        <section class="records-section">
+
+            <div class="section-header">
+
+                <div>
+
+                    <h2>Student Records</h2>
+
+                    <p>
+                        View and manage all student records
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- MESSAGE -->
+            <div id="message"></div>
+
+
+            <!-- TABLE -->
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Name</th>
+
+                            <th>Age</th>
+
+                            <th>Course</th>
+
+                            <th>Action</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="studentTableBody">
+
+                        <!-- Students will be loaded here -->
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </div>
+
+
+    <script>
+
+        // ==========================================
+        // ADD STUDENT
+        // ==========================================
+
+        document
+            .getElementById("studentForm")
+            .addEventListener("submit", addStudent);
+
+
+        async function addStudent(event) {
+
+            event.preventDefault();
+
+
+            const name =
+                document
+                    .getElementById("name")
+                    .value
+                    .trim();
+
+
+            const age =
+                document
+                    .getElementById("age")
+                    .value
+                    .trim();
+
+
+            const course =
+                document
+                    .getElementById("course")
+                    .value
+                    .trim();
+
+
+            // Clear previous errors
+
+            document.getElementById("nameError").textContent = "";
+            document.getElementById("ageError").textContent = "";
+            document.getElementById("courseError").textContent = "";
+
+
+            let valid = true;
+
+
+            // ==========================================
+            // NAME VALIDATION
+            // ==========================================
+
+            if (!name) {
+
+                document.getElementById("nameError").textContent =
+                    "Name is mandatory.";
+
+                valid = false;
+
+            }
+
+            else if (!/^[A-Za-z ]+$/.test(name)) {
+
+                document.getElementById("nameError").textContent =
+                    "Name must contain letters only.";
+
+                valid = false;
+
+            }
+
+
+            // ==========================================
+            // AGE VALIDATION
+            // ==========================================
+
+            if (!age) {
+
+                document.getElementById("ageError").textContent =
+                    "Age is mandatory.";
+
+                valid = false;
+
+            }
+
+            else if (!/^[0-9]+$/.test(age)) {
+
+                document.getElementById("ageError").textContent =
+                    "Age must contain numbers only.";
+
+                valid = false;
+
+            }
+
+            else if (Number(age) < 1 || Number(age) > 100) {
+
+                document.getElementById("ageError").textContent =
+                    "Age must be between 1 and 100.";
+
+                valid = false;
+
+            }
+
+
+            // ==========================================
+            // COURSE VALIDATION
+            // ==========================================
+
+            if (!course) {
+
+                document.getElementById("courseError").textContent =
+                    "Course is mandatory.";
+
+                valid = false;
+
+            }
+
+            else if (course.length < 2) {
+
+                document.getElementById("courseError").textContent =
+                    "Please enter a valid course.";
+
+                valid = false;
+
+            }
+
+
+            // Stop if validation failed
+
+            if (!valid) {
+                return;
+            }
+
+
+            try {
+
+                const response =
+                    await fetch("/students", {
+
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+
+                        body: JSON.stringify({
+                            name: name,
+                            age: Number(age),
+                            course: course
+                        })
+
+                    });
+
+
+                const data =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    document.getElementById("message").innerHTML =
+                        `<div class="message error">
+                            ${data.message}
+                        </div>`;
+
+                    return;
+                }
+
+
+                // Clear form
+
+                document.getElementById("studentForm").reset();
+
+
+                // Success message
+
+                document.getElementById("message").innerHTML =
+                    `<div class="message success">
+                        Student added successfully.
+                    </div>`;
+
+
+                // Reload records
+
+                getStudents();
+
+            }
+
+
+            catch (error) {
+
+                document.getElementById("message").innerHTML =
+                    `<div class="message error">
+                        Unable to connect to server.
+                    </div>`;
+
+            }
+
+        }
+
+
+        // ==========================================
+        // GET ALL STUDENTS
+        // ==========================================
+
+        async function getStudents() {
+
+            try {
+
+                const response =
+                    await fetch("/students");
+
+
+                const students =
+                    await response.json();
+
+
+                const tableBody =
+                    document.getElementById(
+                        "studentTableBody"
+                    );
+
+
+                tableBody.innerHTML = "";
+
+
+                // No records
+
+                if (students.length === 0) {
+
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="4">
+                                <div class="empty-state">
+                                    No student records found.
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+
+                    return;
+                }
+
+
+                // Display students
+
+                students.forEach(student => {
+
+                    const row =
+                        document.createElement("tr");
+
+
+                    row.innerHTML = `
+
+                        <!-- NAME -->
+
+                        <td>
+
+                            <div class="field-value">
+                                ${student.name}
+                            </div>
+
+                            <button
+                                class="update-btn"
+                                onclick="showUpdateBox(
+                                    '${student._id}',
+                                    'name'
+                                )"
+                            >
+                                Update Name
+                            </button>
+
+                            <div
+                                id="update-name-${student._id}"
+                                class="update-box"
+                            ></div>
+
+                        </td>
+
+
+                        <!-- AGE -->
+
+                        <td>
+
+                            <div class="field-value">
+                                ${student.age}
+                            </div>
+
+                            <button
+                                class="update-btn"
+                                onclick="showUpdateBox(
+                                    '${student._id}',
+                                    'age'
+                                )"
+                            >
+                                Update Age
+                            </button>
+
+                            <div
+                                id="update-age-${student._id}"
+                                class="update-box"
+                            ></div>
+
+                        </td>
+
+
+                        <!-- COURSE -->
+
+                        <td>
+
+                            <div class="field-value">
+                                ${student.course}
+                            </div>
+
+                            <button
+                                class="update-btn"
+                                onclick="showUpdateBox(
+                                    '${student._id}',
+                                    'course'
+                                )"
+                            >
+                                Update Course
+                            </button>
+
+                            <div
+                                id="update-course-${student._id}"
+                                class="update-box"
+                            ></div>
+
+                        </td>
+
+
+                        <!-- DELETE -->
+
+                        <td>
+
+                            <button
+                                class="delete-btn"
+                                onclick="deleteStudent(
+                                    '${student._id}'
+                                )"
+                            >
+                                Delete Record
+                            </button>
+
+                        </td>
+
+                    `;
+
+
+                    tableBody.appendChild(row);
+
+                });
+
+            }
+
+
+            catch (error) {
+
+                document.getElementById("message").innerHTML =
+                    `<div class="message error">
+                        Unable to load student records.
+                    </div>`;
+
+            }
+
+        }
+
+
+        // ==========================================
+        // SHOW UPDATE BOX
+        // ==========================================
+
+        function showUpdateBox(id, field) {
+
+            const container =
+                document.getElementById(
+                    `update-${field}-${id}`
+                );
+
+
+            // Close if already open
+
+            if (container.innerHTML !== "") {
+
+                container.innerHTML = "";
+
+                return;
+            }
+
+
+            let placeholder = "";
+
+
+            if (field === "name") {
+
+                placeholder =
+                    "Enter new name";
+
+            }
+
+            else if (field === "age") {
+
+                placeholder =
+                    "Enter new age";
+
+            }
+
+            else {
+
+                placeholder =
+                    "Enter new course";
+
+            }
+
+
+            container.innerHTML = `
+
+                <div class="inline-update">
+
+                    <input
+                        type="text"
+                        id="input-${field}-${id}"
+                        placeholder="${placeholder}"
+                    >
+
+                    <button
+                        class="save-btn"
+                        onclick="saveField(
+                            '${id}',
+                            '${field}'
+                        )"
+                    >
+                        Save
+                    </button>
+
+                    <button
+                        class="cancel-btn"
+                        onclick="cancelUpdate(
+                            '${id}',
+                            '${field}'
+                        )"
+                    >
+                        Cancel
+                    </button>
+
+                    <div
+                        id="error-${field}-${id}"
+                        class="inline-error"
+                    ></div>
+
+                </div>
+
+            `;
+
+        }
+
+
+        // ==========================================
+        // SAVE SINGLE FIELD
+        // ==========================================
+
+        async function saveField(id, field) {
+
+            const input =
+                document.getElementById(
+                    `input-${field}-${id}`
+                );
+
+
+            const error =
+                document.getElementById(
+                    `error-${field}-${id}`
+                );
+
+
+            const value =
+                input.value.trim();
+
+
+            // Clear previous error
+
+            error.textContent = "";
+
+
+            // ==========================================
+            // MANDATORY VALIDATION
+            // ==========================================
+
+            if (!value) {
+
+                error.textContent =
+                    `${field} is mandatory.`;
+
+                return;
+            }
+
+
+            // ==========================================
+            // NAME VALIDATION
+            // ==========================================
+
+            if (field === "name") {
+
+                if (!/^[A-Za-z ]+$/.test(value)) {
+
+                    error.textContent =
+                        "Name must contain letters only.";
+
+                    return;
+                }
+
+            }
+
+
+            // ==========================================
+            // AGE VALIDATION
+            // ==========================================
+
+            if (field === "age") {
+
+                if (!/^[0-9]+$/.test(value)) {
+
+                    error.textContent =
+                        "Age must contain numbers only.";
+
+                    return;
+                }
+
+
+                if (
+                    Number(value) < 1 ||
+                    Number(value) > 100
+                ) {
+
+                    error.textContent =
+                        "Age must be between 1 and 100.";
+
+                    return;
+                }
+
+            }
+
+
+            // ==========================================
+            // COURSE VALIDATION
+            // ==========================================
+
+            if (field === "course") {
+
+                if (value.length < 2) {
+
+                    error.textContent =
+                        "Please enter a valid course.";
+
+                    return;
+                }
+
+            }
+
+
+            // ==========================================
+            // SEND UPDATE TO SERVER
+            // ==========================================
+
+            try {
+
+                const response =
+                    await fetch(
+                        `/students/${id}/field`,
+                        {
+                            method: "PUT",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body: JSON.stringify({
+
+                                field: field,
+
+                                value: value
+
+                            })
+
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                // Backend error
+
+                if (!response.ok) {
+
+                    error.textContent =
+                        data.message;
+
+                    return;
+                }
+
+
+                // Reload records
+
+                getStudents();
+
+            }
+
+
+            catch (err) {
+
+                error.textContent =
+                    "Unable to update record.";
+
+            }
+
+        }
+
+
+        // ==========================================
+        // CANCEL UPDATE
+        // ==========================================
+
+        function cancelUpdate(id, field) {
+
+            const container =
+                document.getElementById(
+                    `update-${field}-${id}`
+                );
+
+
+            container.innerHTML = "";
+
+        }
+
+
+        // ==========================================
+        // DELETE COMPLETE RECORD
+        // ==========================================
+
+        async function deleteStudent(id) {
+
+            const confirmDelete =
+                confirm(
+                    "Are you sure you want to delete this complete student record?"
+                );
+
+
+            if (!confirmDelete) {
+                return;
+            }
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        `/students/${id}`,
+                        {
+                            method: "DELETE"
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    document.getElementById(
+                        "message"
+                    ).innerHTML =
+
+                        `<div class="message error">
+                            ${data.message}
+                        </div>`;
+
+                    return;
+                }
+
+
+                document.getElementById(
+                    "message"
+                ).innerHTML =
+
+                    `<div class="message success">
+                        Complete student record deleted successfully.
+                    </div>`;
+
+
+                // Reload records
+
+                getStudents();
+
+            }
+
+
+            catch (error) {
+
+                document.getElementById(
+                    "message"
+                ).innerHTML =
+
+                    `<div class="message error">
+                        Unable to delete record.
+                    </div>`;
+
+            }
+
+        }
+
+
+        // ==========================================
+        // LOAD STUDENTS WHEN PAGE OPENS
+        // ==========================================
+
+        getStudents();
+
+    </script>
+
+</body>
+
+</html>
